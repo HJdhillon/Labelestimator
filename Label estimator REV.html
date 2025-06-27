@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Label Estimator</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --light: #ecf0f1;
+            --danger: #e74c3c;
+        }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        }
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .calculator {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+        .header {
+            background: var(--secondary);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        .content {
+            padding: 25px;
+        }
+        .input-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+        select, input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: border-color 0.3s;
+        }
+        select:focus, input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #result {
+            background: #e8f4fc;
+            border-left: 5px solid var(--primary);
+            padding: 25px;
+            margin-top: 25px;
+            border-radius: 12px;
+            display: none;
+            text-align: center;
+        }
+        .result-label {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        .result-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin: 10px 0;
+        }
+        .details {
+            color: #95a5a6;
+            font-size: 1rem;
+            margin-top: 15px;
+        }
+        .empty-warning {
+            color: var(--danger);
+            font-weight: 500;
+            text-align: center;
+            margin-top: 10px;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+                display: block;
+            }
+            .header {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="header">
+            <h1>Label Roll Calculator</h1>
+        </div>
+        
+        <div class="content">
+            <div class="input-group">
+                <label for="itemCode">Product Code</label>
+                <select id="itemCode">
+                    <option value="">Select product code</option>
+                    <option value="2000001269">2000001269</option>
+                    <option value="2000010247">2000010247</option>
+                    <option value="2000104246">2000104246</option>
+                    <option value="2000001280">2000001280</option>
+                    <option value="2000001331">2000001331</option>
+                    <option value="2000009358">2000009358</option>
+                    <option value="2000001270">2000001270</option>
+                    <option value="2000007495">2000007495</option>
+                    <option value="2000007827">2000007827</option>
+                    <option value="2000014941">2000014941</option>
+                    <option value="2000006646">2000006646</option>
+                    <option value="2000010000">2000010000</option>
+                </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="weight">Roll Weight (kg)</label>
+                <input type="number" id="weight" placeholder="Enter weight" step="0.01" min="0">
+            </div>
+            
+            <button onclick="calculate()">
+                Calculate Labels
+            </button>
+            
+            <div id="result">
+                <div class="result-label">Estimated labels:</div>
+                <div class="result-number" id="labelCount">0</div>
+                <div class="details" id="calculationDetails"></div>
+                <div class="empty-warning" id="warning" style="display:none">
+                    ⚠️ Weight is less than core weight
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const formulas = {
+            '2000001269': { core: 0.04, multiplier: 2800, divisor: 1.73, name: "2800 Label Roll" },
+            '2000010247': { core: 0.04, multiplier: 500, divisor: 1.52, name: "500 Label Roll" },
+            '2000104246': { core: 0.04, multiplier: 500, divisor: 1.72, name: "500 Label Roll" },
+            '2000001280': { core: 0.06, multiplier: 1200, divisor: 2.35, name: "1200 Label Roll" },
+            '2000001331': { core: 0.06, multiplier: 2000, divisor: 2.42, name: "2000 Label Roll" },
+            '2000009358': { core: 0.06, multiplier: 500, divisor: 1.85, name: "500 Label Roll" },
+            '2000001270': { core: 0.06, multiplier: 2000, divisor: 2.73, name: "2000 Label Roll" },
+            '2000007495': { core: 0.12, multiplier: 500, divisor: 2.39, name: "500 Label Roll" },
+            '2000007827': { core: 0.12, multiplier: 500, divisor: 2.57, name: "500 Label Roll" },
+            '2000014941': { core: 0.12, multiplier: 500, divisor: 2.10, name: "500 Label Roll" },
+            '2000006646': { core: 0.12, multiplier: 500, divisor: 2.58, name: "500 Label Roll" },
+            // NEW ITEM ADDED HERE
+            '2000010000': { core: 0.06, multiplier: 500, divisor: 2.07, name: "500 Label Roll" }
+        };
+
+        function calculate() {
+            // Reset UI
+            document.getElementById('warning').style.display = 'none';
+            
+            // Get inputs
+            const itemCode = document.getElementById('itemCode').value;
+            const weightInput = document.getElementById('weight').value;
+            
+            // Validate
+            if (!itemCode) {
+                alert("Please select a product code");
+                return;
+            }
+            
+            const weight = parseFloat(weightInput);
+            if (isNaN(weight)) {
+                alert("Please enter a valid weight");
+                return;
+            }
+            
+            const formula = formulas[itemCode];
+            const netWeight = weight - formula.core;
+            
+            // Calculate
+            const resultDiv = document.getElementById('result');
+            if (netWeight <= 0) {
+                document.getElementById('labelCount').textContent = "0";
+                document.getElementById('calculationDetails').textContent = 
+                    `${formula.name} | Core: ${formula.core}kg`;
+                document.getElementById('warning').style.display = 'block';
+                resultDiv.style.display = 'block';
+            } else {
+                const labels = Math.round((netWeight * formula.multiplier) / formula.divisor);
+                document.getElementById('labelCount').textContent = 
+                    labels.toLocaleString();
+                document.getElementById('calculationDetails').innerHTML = 
+                    `${formula.name} | Formula: (${weight} - ${formula.core}) × ${formula.multiplier} ÷ ${formula.divisor}`;
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        // Add keyboard support
+        document.getElementById('weight').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calculate();
+        });
+        
+        // Auto-focus first input
+        window.onload = function() {
+            document.getElementById('itemCode').focus();
+        };
+    </script>
+</body>
+</html>
